@@ -1677,6 +1677,7 @@ class CPUCodeGen(TargetCodeGenerator):
         node: nodes.MapEntry,
         function_stream,
         callsite_stream,
+        use_tasks = True,
     ):
         state_dfg = sdfg.node(state_id)
         map_params = node.map.params
@@ -1740,7 +1741,10 @@ class CPUCodeGen(TargetCodeGenerator):
             #                var=outedge.src_conn))
             #            reduced_variables.append(outedge)
 
-            map_header += " %s\n" % ", ".join(reduction_stmts)
+            if use_tasks:
+                map_header += "\n"
+            else:
+                map_header += " %s\n" % ", ".join(reduction_stmts)
 
         # TODO: Explicit map unroller
         if node.map.unroll:
@@ -1751,6 +1755,7 @@ class CPUCodeGen(TargetCodeGenerator):
 
         # Nested loops
         result.write(map_header, sdfg, state_id, node)
+        task_pragma = False
         for i, r in enumerate(node.map.range):
             # var = '__DACEMAP_%s_%d' % (node.map.label, i)
             var = map_params[i]
@@ -1767,12 +1772,20 @@ class CPUCodeGen(TargetCodeGenerator):
                 node,
             )
 
+            if i == node.map.collapse - 1:
+                result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+                task_pragma = True
+
+        if not task_pragma:
+            result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+
+
         callsite_stream.write(inner_stream.getvalue())
 
         # Emit internal transient array allocation
         self._frame.allocate_arrays_in_scope(sdfg, node, function_stream, result)
 
-    def _generate_MapExit(self, sdfg, dfg, state_id, node, function_stream, callsite_stream):
+    def _generate_MapExit(self, sdfg, dfg, state_id, node, function_stream, callsite_stream, use_tasks = True):
         result = callsite_stream
 
         # Obtain start of map
@@ -1796,6 +1809,9 @@ class CPUCodeGen(TargetCodeGenerator):
         self.generate_scope_postamble(sdfg, dfg, state_id, function_stream, outer_stream, callsite_stream)
 
         for _ in map_node.map.range:
+            result.write("}", sdfg, state_id, node)
+        
+        if use_tasks:
             result.write("}", sdfg, state_id, node)
 
         result.write(outer_stream.getvalue())
