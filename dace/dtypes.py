@@ -53,6 +53,12 @@ class OMPScheduleType(aenum.AutoNumberEnum):
     Dynamic = ()  #: Dynamic schedule
     Guided = ()  #: Guided schedule
 
+@undefined_safe_enum
+@extensible_enum
+class OMPParallelismType(aenum.AutoNumberEnum):
+    """ Available OpenMP parallelism types for Maps with CPU-Multicore schedule. """
+    ParallelFor = ()  #: OpenMP for loop
+    Tasks = ()  #: OpenMP tasks
 
 @undefined_safe_enum
 @extensible_enum

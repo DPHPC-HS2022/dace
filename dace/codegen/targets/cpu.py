@@ -1678,7 +1678,6 @@ class CPUCodeGen(TargetCodeGenerator):
         node: nodes.MapEntry,
         function_stream,
         callsite_stream,
-        use_tasks = True,
     ):
         state_dfg = sdfg.node(state_id)
         map_params = node.map.params
@@ -1705,6 +1704,9 @@ class CPUCodeGen(TargetCodeGenerator):
         instr = self._dispatcher.instrumentation[node.map.instrument]
         if instr is not None:
             instr.on_scope_entry(sdfg, state_dfg, node, callsite_stream, inner_stream, function_stream)
+
+        use_tasks = node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+                    node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks
 
         # TODO: Refactor to generate_scope_preamble once a general code
         #  generator (that CPU inherits from) is implemented
@@ -1773,11 +1775,11 @@ class CPUCodeGen(TargetCodeGenerator):
                 node,
             )
 
-            if i == node.map.collapse - 1:
+            if use_tasks and i == node.map.collapse - 1:
                 result.write("#pragma omp task\n{\n", sdfg, state_id, node)
                 task_pragma = True
 
-        if not task_pragma:
+        if use_tasks and not task_pragma:
             result.write("#pragma omp task\n{\n", sdfg, state_id, node)
 
 
@@ -1786,7 +1788,7 @@ class CPUCodeGen(TargetCodeGenerator):
         # Emit internal transient array allocation
         self._frame.allocate_arrays_in_scope(sdfg, node, function_stream, result)
 
-    def _generate_MapExit(self, sdfg, dfg, state_id, node, function_stream, callsite_stream, use_tasks = True):
+    def _generate_MapExit(self, sdfg, dfg, state_id, node, function_stream, callsite_stream):
         result = callsite_stream
 
         # Obtain start of map
@@ -1812,7 +1814,8 @@ class CPUCodeGen(TargetCodeGenerator):
         for _ in map_node.map.range:
             result.write("}", sdfg, state_id, node)
         
-        if use_tasks:
+        if node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+        node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks:
             result.write("}", sdfg, state_id, node)
 
         result.write(outer_stream.getvalue())
