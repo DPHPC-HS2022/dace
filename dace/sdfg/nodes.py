@@ -823,7 +823,7 @@ class Map(object):
                               desc="OpenMP schedule chunk size",
                               optional=True,
                               optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
-    omp_parallelism = Property(dtype=dtypes.OMPParallelismType,
+    omp_parallelism = EnumProperty(dtype=dtypes.OMPParallelismType,
                                default=dtypes.OMPParallelismType.Tasks,
                                desc="OpenMP pragma used to parallelize the Map {for, task}",
                                optional=True,
