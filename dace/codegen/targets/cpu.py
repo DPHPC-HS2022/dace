@@ -1705,6 +1705,9 @@ class CPUCodeGen(TargetCodeGenerator):
         if instr is not None:
             instr.on_scope_entry(sdfg, state_dfg, node, callsite_stream, inner_stream, function_stream)
 
+        use_tasks = node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+                    node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks
+
         # TODO: Refactor to generate_scope_preamble once a general code
         #  generator (that CPU inherits from) is implemented
         if node.map.schedule == dtypes.ScheduleType.CPU_Multicore:
@@ -1741,7 +1744,10 @@ class CPUCodeGen(TargetCodeGenerator):
             #                var=outedge.src_conn))
             #            reduced_variables.append(outedge)
 
-            map_header += " %s\n" % ", ".join(reduction_stmts)
+            if use_tasks:
+                map_header += "\n"
+            else:
+                map_header += " %s\n" % ", ".join(reduction_stmts)
 
         # TODO: Explicit map unroller
         if node.map.unroll:
@@ -1752,6 +1758,7 @@ class CPUCodeGen(TargetCodeGenerator):
 
         # Nested loops
         result.write(map_header, sdfg, state_id, node)
+        task_pragma = False
         for i, r in enumerate(node.map.range):
             # var = '__DACEMAP_%s_%d' % (node.map.label, i)
             var = map_params[i]
@@ -1767,6 +1774,14 @@ class CPUCodeGen(TargetCodeGenerator):
                 state_id,
                 node,
             )
+
+            if use_tasks and i == node.map.collapse - 1:
+                result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+                task_pragma = True
+
+        if use_tasks and not task_pragma:
+            result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+
 
         callsite_stream.write(inner_stream.getvalue())
 
@@ -1797,6 +1812,10 @@ class CPUCodeGen(TargetCodeGenerator):
         self.generate_scope_postamble(sdfg, dfg, state_id, function_stream, outer_stream, callsite_stream)
 
         for _ in map_node.map.range:
+            result.write("}", sdfg, state_id, node)
+        
+        if node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+        node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks:
             result.write("}", sdfg, state_id, node)
 
         result.write(outer_stream.getvalue())
