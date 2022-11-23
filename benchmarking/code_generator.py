@@ -35,17 +35,18 @@ def generate(id):
             # Get function
             func = getattr(module, func_name)
         
-            # Generate SDFG for the function
-            sdfg = func.to_sdfg()
-         
-            # Generate code from the SDFG
-            code_objects = generate_code(sdfg) # List of code objects
-            output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name
-            generate_program_folder(sdfg, code_objects, output_path, config=None)
             try:
+                # Generate SDFG for the function
+                sdfg = func.to_sdfg()
+         
+                # Generate code from the SDFG
+                code_objects = generate_code(sdfg) # List of code objects
+                output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name
+                generate_program_folder(sdfg, code_objects, output_path, config=None)
+                
                 lib_file = configure_and_compile(output_path, program_name="test", output_stream=None)
-            except dace.codegen.exceptions.CompilerConfigurationError:
-                print("### Ignoring benchmark due to CompilerConfigurationError !!!")
+            except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
+                print("### Ignoring benchmark due to Errors !!!")
                 continue
 
             # Compile and Execute
