@@ -265,6 +265,13 @@ required:
                             generate "#pragma omp parallel sections" code around
                             them.
 
+                    omp_use_tasks:
+                        type: bool
+                        default: true
+                        title: OpenMP pragma used to parallelize the Map {for, task}
+                        description: >
+                            If set to true, openMP tasks are generated instead of openMP parallel for
+
             #############################################
             # GPU (CUDA/HIP) compiler
             cuda:

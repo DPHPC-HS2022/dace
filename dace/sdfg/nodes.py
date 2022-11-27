@@ -828,11 +828,16 @@ class Map(object):
                               desc="OpenMP schedule chunk size",
                               optional=True,
                               optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
+    
+    parallelismType = dtypes.OMPParallelismType.Tasks if config.get_bool('compiler', 'cpu', 'omp_use_tasks') else dtypes.OMPParallelismType.ParallelFor
+    print("PARAKLLEISM:",parallelismType)
+    print("CONFIG:",config.get_bool('compiler', 'cpu', 'omp_use_tasks'))
     omp_parallelism = EnumProperty(dtype=dtypes.OMPParallelismType,
-                               default=dtypes.OMPParallelismType.Tasks,
+                               default=parallelismType,
                                desc="OpenMP pragma used to parallelize the Map {for, task}",
                                optional=True,
                                optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
+     
 
     gpu_block_size = ListProperty(element_type=int,
                                   default=None,

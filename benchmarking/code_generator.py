@@ -1,13 +1,18 @@
 import dace
+from dace.config import Config
+from dace import dtypes
 from dace.codegen.codegen import *
 from dace.codegen.compiler import *
 import glob, re, json
 import os, importlib
 
+from IPython.display import Code
+
 def generate(id):
     # Read every function name in npbench
     benchmark_list = glob.glob("./npbench/bench_info/*")
-    for benchmark_info in benchmark_list:
+    #for benchmark_info in benchmark_list:
+    for benchmark_info in ['./npbench/bench_info/adi.json']:
 
             # Extract path from json
         
@@ -36,14 +41,20 @@ def generate(id):
             func = getattr(module, func_name)
         
             try:
+                config = Config()
+                config.set('compiler', 'cpu', 'omp_use_tasks', value=False)
+
                 # Generate SDFG for the function
                 sdfg = func.to_sdfg()
          
                 # Generate code from the SDFG
                 code_objects = generate_code(sdfg) # List of code objects
-                output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name
-                generate_program_folder(sdfg, code_objects, output_path, config=None)
                 
+                #print(Code(code_objects[0].clean_code, language='cpp'))
+
+                output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name
+                generate_program_folder(sdfg, code_objects, output_path, config=config)
+
                 lib_file = configure_and_compile(output_path, program_name="test", output_stream=None)
             except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
                 print("### Ignoring benchmark due to Errors !!!")
