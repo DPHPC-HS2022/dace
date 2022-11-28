@@ -1,0 +1,3 @@
+./npbench/bench_info/spmv.json,benchmarking.npbench.npbench.benchmarks,
+./npbench/bench_info/gemm.json,benchmarking.npbench.npbench.benchmarks,
+./npbench/bench_info/cholesky.json,benchmarking.npbench.npbench.benchmarks,
