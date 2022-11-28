@@ -6,13 +6,29 @@ from dace.codegen.compiler import *
 import glob, re, json
 import os, importlib
 
-from IPython.display import Code
+def generate_benchmark_code(func, output_path, config):
+    # Generate SDFG for the function
+    sdfg = func.to_sdfg()
+         
+    # Generate code from the SDFG
+    code_objects = generate_code(sdfg) # List of code objects  
+    generate_program_folder(sdfg, code_objects, output_path, config=config)
+    lib_file = configure_and_compile(output_path, program_name="test", output_stream=None)
+
+def execute_benchmark_code(output_path):
+    # Compile and Execute
+    path = os.getcwd()
+    os.chdir(output_path + '/build')
+    os.system('gcc -I '+ path +'/../dace/runtime/include/ -o bin ../sample/*.cpp -L . -ltest')
+    os.system('LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./bin')
+    os.chdir(path)
 
 def generate(id):
+    config = Config()
+
     # Read every function name in npbench
     benchmark_list = glob.glob("./npbench/bench_info/*")
-    #for benchmark_info in benchmark_list:
-    for benchmark_info in ['./npbench/bench_info/adi.json']:
+    for benchmark_info in benchmark_list:
 
             # Extract path from json
         
@@ -36,37 +52,24 @@ def generate(id):
 
             print(path_to_import)
             module = importlib.import_module(path_to_import)
-
+        
             # Get function
             func = getattr(module, func_name)
-        
-            try:
-                config = Config()
-                config.set('compiler', 'cpu', 'omp_use_tasks', value=False)
-
-                # Generate SDFG for the function
-                sdfg = func.to_sdfg()
-         
-                # Generate code from the SDFG
-                code_objects = generate_code(sdfg) # List of code objects
+            
+            for omp_use_task in [True, False]:
+                # Change Config & Reloading nodes module to reflect the change
+                Config.set('compiler', 'cpu', 'omp_use_tasks', value = omp_use_task)
+                importlib.reload(dace.sdfg.nodes)  
                 
-                #print(Code(code_objects[0].clean_code, language='cpp'))
-
-                output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name
-                generate_program_folder(sdfg, code_objects, output_path, config=config)
-
-                lib_file = configure_and_compile(output_path, program_name="test", output_stream=None)
-            except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
-                print("### Ignoring benchmark due to Errors !!!")
-                continue
-
-            # Compile and Execute
-            path = os.getcwd()
-            os.chdir('run'+str(id)+'/build-'+rel_path + '-' + func_name + '/build')
-            os.system('gcc -I '+ path +'/../dace/runtime/include/ -o bin ../sample/*.cpp -L . -ltest')
-            os.system('LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./bin')
-            os.chdir(path)
-
+                output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name + "-useTasks=" + str(omp_use_task)
+                
+                try:             
+                    generate_benchmark_code(func, output_path, config)
+                    execute_benchmark_code(output_path)
+                #except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
+                except Exception as e:
+                    print(e)
+                    print("### Ignoring benchmark due to Errors !!! \n")
 
 if __name__=="__main__":
     import argparse
