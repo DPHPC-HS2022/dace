@@ -1681,6 +1681,10 @@ class CPUCodeGen(TargetCodeGenerator):
     ):
         state_dfg = sdfg.node(state_id)
         map_params = node.map.params
+        
+        parallelismType = dtypes.OMPParallelismType.Tasks if Config.get_bool('compiler', 'cpu', 'omp_use_tasks') else dtypes.OMPParallelismType.ParallelFor
+        node.map.omp_parallelism = parallelismType
+
         map_name = "__DACEMAP_" + str(state_id) + "_" + str(dfg.node_id(node))
 
         result = callsite_stream

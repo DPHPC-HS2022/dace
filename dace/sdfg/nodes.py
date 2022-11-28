@@ -829,9 +829,8 @@ class Map(object):
                               optional=True,
                               optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
     
-    parallelismType = dtypes.OMPParallelismType.Tasks if Config.get_bool('compiler', 'cpu', 'omp_use_tasks') else dtypes.OMPParallelismType.ParallelFor
     omp_parallelism = EnumProperty(dtype=dtypes.OMPParallelismType,
-                               default=parallelismType,
+                               default=dtypes.OMPParallelismType.Tasks,
                                desc="OpenMP pragma used to parallelize the Map {for, task}",
                                optional=True,
                                optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)

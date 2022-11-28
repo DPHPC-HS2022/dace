@@ -29,7 +29,7 @@ def generate(id):
     # Read every function name in npbench
     benchmark_list = glob.glob("./npbench/bench_info/*")
     for benchmark_info in benchmark_list:
-
+   
             # Extract path from json
         
             jsonfile = open(benchmark_info,"r")
@@ -57,10 +57,8 @@ def generate(id):
             func = getattr(module, func_name)
             
             for omp_use_task in [True, False]:
-                # Change Config & Reloading nodes module to reflect the change
-                Config.set('compiler', 'cpu', 'omp_use_tasks', value = omp_use_task)
-                importlib.reload(dace.sdfg.nodes)  
-                
+                # Change Config
+                Config.set('compiler', 'cpu', 'omp_use_tasks', value = omp_use_task)               
                 output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name + "-useTasks=" + str(omp_use_task)
                 
                 try:             
