@@ -7,6 +7,13 @@ import glob, re, json
 import os, importlib
 import time
 
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+
 def generate_benchmark_code(func, output_path, config, params_dict):
     # Generate SDFG for the function
     sdfg = func.to_sdfg()
