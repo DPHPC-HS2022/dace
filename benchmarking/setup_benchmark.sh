@@ -10,11 +10,11 @@ then
     python -m pip install -r requirements.txt
     python -m pip install .
     python -m pip install numba
-    python -m pip install dace
+    #python -m pip install dace
 else 
     pip3 install -r requirements.txt
     pip3 install .
     pip3 install numba
-    pip3 install dace
+    #pip3 install dace
 fi
 

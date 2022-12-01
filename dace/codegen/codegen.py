@@ -72,15 +72,34 @@ def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator, param_dict = 
     return f'''#include <cstdlib>
 #include "../include/{sdfg.name}.h"
 
+#ifdef __x86_64__
+#include "tsc_x86.h"
+#endif
+
+
 int main(int argc, char **argv) {{
     {sdfg.name}Handle_t handle;
 {allocations}
 
     handle = __dace_init_{sdfg.name}({init_params});
-    __program_{sdfg.name}(handle{params});
+
+    //cache warm up
+    int warm_up_runs = 5;
+    for(int i=0;i<warm_up_runs;i++) __program_{sdfg.name}(handle{params});
+
+    myInt64 cycles;
+    myInt64 start;
+
+    int num_runs = 5;
+    for (i = 0; i < num_runs; ++i) __program_{sdfg.name}(handle{params});
+
+    cycles = stop_tsc(start)/num_runs;
+
     __dace_exit_{sdfg.name}(handle);
 
 {deallocations}
+
+    printf("Program ran for %lf cycles\n", (double) cycles);
 
     return 0;
 }}
