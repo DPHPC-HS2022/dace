@@ -91,7 +91,7 @@ int main(int argc, char **argv) {{
     myInt64 start;
 
     int num_runs = 5;
-    for (i = 0; i < num_runs; ++i) __program_{sdfg.name}(handle{params});
+    for (int i = 0; i < num_runs; ++i) __program_{sdfg.name}(handle{params});
 
     cycles = stop_tsc(start)/num_runs;
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {{
 
 {deallocations}
 
-    printf("Program ran for %lf cycles\n", (double) cycles);
+    printf("Program ran for %lld cycles\\n", cycles);
 
     return 0;
 }}
