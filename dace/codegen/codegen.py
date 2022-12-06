@@ -88,7 +88,7 @@ int main(int argc, char **argv) {{
     for(int i=0;i<warm_up_runs;i++) __program_{sdfg.name}(handle{params});
 
     myInt64 cycles;
-    myInt64 start;
+    myInt64 start = start_tsc();
 
     int num_runs = 5;
     for (int i = 0; i < num_runs; ++i) __program_{sdfg.name}(handle{params});

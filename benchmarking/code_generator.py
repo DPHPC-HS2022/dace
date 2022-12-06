@@ -27,7 +27,9 @@ def execute_benchmark_code(output_path):
     # Compile and Execute
     path = os.getcwd()
     os.chdir(output_path + '/build')
-    os.system('gcc -I '+ path +'/../dace/runtime/include/ -I ' +path+'/ -o bin ../sample/*.cpp -L . -ltest')
+    compile_cmd = 'gcc -I '+ path +'/../dace/runtime/include/ -I ' +path+'/ -o bin ../sample/*.cpp -L . -ltest' 
+    os.system(compile_cmd)
+    print("COMPILE CMD : ",compile_cmd)
     avg = 0
     N = 10
     for i in range(N):
