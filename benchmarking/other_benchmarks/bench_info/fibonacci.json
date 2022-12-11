@@ -1,0 +1,12 @@
+{
+    "benchmark":{
+        "name":"fibonacci_recursive",
+	"shortname" : "fibonacci",
+	"relative_path":"fibonacci",
+	"module_name":"fibonacci_recursive",
+	"func_name":"fibonacci",
+	"parameters":{
+	    "S": { "v":10 }
+	}
+    }
+}

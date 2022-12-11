@@ -4,3 +4,5 @@
 ./npbench/bench_info/mvt.json,benchmarking.npbench.npbench.benchmarks,
 ./npbench/bench_info/stockham_fft.json,benchmarking.npbench.npbench.benchmarks,
 ./npbench/bench_info/lu.json,benchmarking.npbench.npbench.benchmarks,
+./other_benchmarks/bench_info/fibonacci.json,benchmarking.other_benchmarks,
+./other_benchmarks/bench_info/insertion_sort.json,benchmarking.other_benchmarks,
