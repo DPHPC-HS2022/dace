@@ -7,9 +7,16 @@ bash setup_benchmark.sh
 # Run benchmarks 
 
 Run the benchmark (specify the ./run-id/ directory if required, default is ./run1/)
-Reads the dace benchmark programs from benchmarks.txt, generates code for openmp tasks and parallel for, compiles and runs the generated C code.
+Reads the dace benchmark programs pointed by file, generates code for openmp tasks and parallel for, compiles and runs the generated C code.
+
+Example, 
 ```
-python code_generator.py --id 1
+python code_generator.py --id 1 --file benchmarks.txt 
+```
+
+To run the original npbench benchmarks, add --npbench
+```
+python code_generator.py --id 1 --npbench
 ```
 
 # Adding benchmarks

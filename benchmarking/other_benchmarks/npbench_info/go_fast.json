@@ -1,0 +1,23 @@
+{
+    "benchmark": {
+        "name": "GoFast",
+        "short_name": "npgofast",
+        "relative_path": "go_fast",
+        "module_name": "go_fast",
+        "func_name": "go_fast",
+        "kind": "microbench",
+        "domain": "Others",
+        "dwarf": "dense_linear_algebra",
+        "parameters": {
+            "Sim1": { "N": 2000 }
+        },
+        "init": {
+            "func_name": "initialize",
+            "input_args": ["N"],
+            "output_args": ["a"]
+        },
+        "input_args": ["a"],
+        "array_args": ["a"],
+        "output_args": []
+    }
+}

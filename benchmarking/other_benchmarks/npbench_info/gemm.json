@@ -1,0 +1,24 @@
+{
+    "benchmark": {
+        "name": "General matrix-matrix multiplication",
+        "short_name": "gemm",
+        "relative_path": "polybench/gemm",
+        "module_name": "gemm",
+        "func_name": "kernel",
+        "kind": "microbench",
+        "domain": "LinAlg",
+        "dwarf": "dense_linear_algebra",
+        "parameters": {
+            "Sim1": { "NI": 100, "NJ": 110, "NK": 120 },
+            "Sim2": { "NI": 1000, "NJ": 1100, "NK": 1200 }
+        },
+        "init": {
+            "func_name": "initialize",
+            "input_args": ["NI", "NJ", "NK"],
+            "output_args": ["alpha", "beta", "C", "A", "B"]
+        },
+        "input_args": ["alpha", "beta", "C", "A", "B"],
+        "array_args": ["C", "A", "B"],
+        "output_args": ["C"]
+    }
+}

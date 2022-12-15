@@ -1,0 +1,23 @@
+{
+    "benchmark": {
+        "name": "Horizontal Diffusion",
+        "short_name": "hdiff",
+        "relative_path": "weather_stencils/hdiff",
+        "module_name": "hdiff",
+        "func_name": "hdiff",
+        "kind": "microapp",
+        "domain": "Weather",
+        "dwarf": "structured_grids",
+        "parameters": {
+            "Sim1": { "I": 64, "J": 64, "K": 60 }
+        },
+        "init": {
+            "func_name": "initialize",
+            "input_args": ["I", "J", "K"],
+            "output_args": ["in_field", "out_field", "coeff"]
+        },
+        "input_args": ["in_field", "out_field", "coeff"],
+        "array_args": ["in_field", "out_field", "coeff"],
+        "output_args": ["out_field"]
+    }
+}
