@@ -68,8 +68,12 @@ def generate(id, run_original_npbench, benchmark_file):
 
     #for benchmark_info in benchmark_list:
     for benchmark_info in benchmark_list_file:
+            
+            # ignore commented paths
+            if benchmark_info[0] == '#':
+                continue
+            
             # Extract path from json
-        
             print("BENCHMARK:", benchmark_info)
             jsonfile = open(benchmark_info.split(",")[0],"r")
             benchmark_data = json.load(jsonfile)
