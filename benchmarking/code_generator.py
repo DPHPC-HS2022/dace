@@ -3,12 +3,14 @@ from dace.config import Config
 from dace import dtypes
 from dace.codegen.codegen import *
 from dace.codegen.compiler import *
+
 import glob, re, json
 import os, importlib
 import time
 
 import sys
 import inspect
+import subprocess
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -30,14 +32,16 @@ def execute_benchmark_code(output_path):
     compile_cmd = 'gcc -I '+ path +'/../dace/runtime/include/ -I ' +path+'/ -o bin ../sample/*.cpp -L . -ltest' 
     os.system(compile_cmd)
     create_script(compile_cmd)
+    N = 1 # it's enough to execute the benchmark once as the benchmark executes the function multiple times
     avg = 0
-    N = 5
     for i in range(N):
-        st = time.process_time()
-        os.system('LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./bin')
-        et = time.process_time()
-        avg += et-st
+        out = subprocess.run('LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./bin', shell=True, capture_output=True).stdout
+        print(out)
+        out = int(re.search(r'\d+', str(out)).group())
+        avg += out
+    avg /= N
     os.chdir(path)
+    return avg
 
 # To manually run from benchmark run directory
 def create_script(compile_cmd):
@@ -51,6 +55,10 @@ def create_script(compile_cmd):
 
 def generate(id, run_original_npbench, benchmark_file):
     config = Config()
+
+    # create benchmark results dir if not exists
+    benchmark_results_dir = os.getcwd() + "/benchmark_results/"
+    os.makedirs(benchmark_results_dir, exist_ok=True)
 
     # Read every function name in npbench
     if (run_original_npbench):
@@ -88,21 +96,27 @@ def generate(id, run_original_npbench, benchmark_file):
         
             # Get function
             func = getattr(module, func_name)
-            
-            # Iterate over multiple workload sizes
-            for key in params_dict.keys():
-                params = benchmark_data['benchmark']['parameters'][key]
-                print("-PARAMETER:",params)
 
-                for omp_use_task in [True, False]:
+            # Iterate over multiple workload sizes
+            for omp_use_task in [True, False]:
+                print("---OMP CONFIG TASKING:" + str(omp_use_task))
+                result_file_name = benchmark_data['benchmark']['name'] + str(omp_use_task) + ".csv"
+                csv_dir = benchmark_results_dir + result_file_name
+
+                # write csv header
+                file = open(csv_dir, 'w+')
+                file.write(list(benchmark_data['benchmark']['parameters'][list(params_dict)[0]])[0] + ", cycles\n")
+                for key in params_dict.keys():
+                    params = benchmark_data['benchmark']['parameters'][key]
+                    print("-PARAMETER:",params)
                     # Change Config
                     Config.set('compiler', 'cpu', 'omp_use_tasks', value = omp_use_task)               
                     output_path = "run" + str(id) + "/build-" + rel_path + "-" + func_name + "-useTasks=" + str(omp_use_task)
-                    print("---OMP CONFIG TASKING:" + str(omp_use_task))
 
                     try:     
                         generate_benchmark_code(func, output_path, config, params)
-                        execute_benchmark_code(output_path)
+                        cycles = execute_benchmark_code(output_path)
+                        file.write(str(list(params.values())[0]) + ", " + str(cycles) + '\n')
                     #except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
                     except Exception as e:
                         print(e)
