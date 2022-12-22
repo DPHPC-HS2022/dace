@@ -1,0 +1,12 @@
+{
+    "benchmark":{
+		"name":"Dummy Tasking Test",
+		"shortname" : "test",
+		"relative_path":"test",
+		"module_name":"test",
+		"func_name":"test_func",
+		"parameters":{
+			"S": { "N": 2, "M" : 28 }
+		}
+    }
+}
