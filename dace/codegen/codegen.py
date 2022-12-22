@@ -110,7 +110,7 @@ int main(int argc, char **argv) {{
     }}
     mean = sum / N_RUNS;
     for (int i = 0; i < N_RUNS; ++i) {{
-        SD += pow(cycles[i] - mean, 2);
+        SD += pow((double)cycles[i] - mean, 2);
     }}
     SD = sqrt(SD / N_RUNS);
 
