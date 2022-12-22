@@ -74,6 +74,8 @@ def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator, param_dict = 
 
 #ifdef __x86_64__
 #include "tsc_x86.h"
+#include <math.h>
+#include <stdio.h>
 #endif
 
 
@@ -87,19 +89,36 @@ int main(int argc, char **argv) {{
     int warm_up_runs = 5;
     for(int i=0;i<warm_up_runs;i++) __program_{sdfg.name}(handle{params});
 
-    myInt64 cycles;
-    myInt64 start = start_tsc();
+    myInt64 avg_cycles;
+    #define N_RUNS 5
+    myInt64 cycles[N_RUNS];
 
-    int num_runs = 5;
-    for (int i = 0; i < num_runs; ++i) __program_{sdfg.name}(handle{params});
+    myInt64 start; = start_tsc();
 
-    cycles = stop_tsc(start)/num_runs;
+    for (int i = 0; i < N_RUNS; ++i) {{
+        start = start_tsc();
+        __program_{sdfg.name}(handle{params});
+        cycles[i] = stop_tsc(start);
+        avg_cycles += cycles[i];
+    }}
+    avg_cycles /= N_RUNS;
+
+    //Compute std dev
+    double sum = 0.0, mean, SD = 0.0;
+    for (int i = 0; i < N_RUNS; ++i) {{
+        sum += (double)cycles[i];
+    }}
+    mean = sum / N_RUNS;
+    for (int i = 0; i < N_RUNS; ++i) {{
+        SD += pow(cycles[i] - mean, 2);
+    }}
+    SD = sqrt(SD / N_RUNS);
 
     __dace_exit_{sdfg.name}(handle);
 
 {deallocations}
 
-    printf("Program ran for %lld cycles\\n", cycles);
+    printf("Program ran for %lld cycles\\n With std dev: %lld", cycles, SD);
 
     return 0;
 }}
