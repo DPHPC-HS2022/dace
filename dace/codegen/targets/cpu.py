@@ -1690,8 +1690,14 @@ class CPUCodeGen(TargetCodeGenerator):
         result = callsite_stream
         map_header = ""
 
+        use_tasks = node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+                    node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks
+
         # Encapsulate map with a C scope
         # TODO: Refactor out of MapEntry generation (generate_scope_header?)
+        alternative = True
+        if alternative and use_tasks:
+            result.write("#pragma omp parallel\n#pragma omp single")
         callsite_stream.write('{', sdfg, state_id, node)
 
         # Define all input connectors of this map entry
@@ -1709,13 +1715,11 @@ class CPUCodeGen(TargetCodeGenerator):
         if instr is not None:
             instr.on_scope_entry(sdfg, state_dfg, node, callsite_stream, inner_stream, function_stream)
 
-        use_tasks = node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
-                    node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks
-
         # TODO: Refactor to generate_scope_preamble once a general code
         #  generator (that CPU inherits from) is implemented
         if node.map.schedule == dtypes.ScheduleType.CPU_Multicore:
-            map_header += "#pragma omp parallel for"
+            if not (alternative and use_tasks):
+                map_header += "#pragma omp parallel for"
             if node.map.omp_schedule != dtypes.OMPScheduleType.Default:
                 schedule = " schedule("
                 if node.map.omp_schedule == dtypes.OMPScheduleType.Static:
@@ -1754,6 +1758,7 @@ class CPUCodeGen(TargetCodeGenerator):
                 map_header += " %s\n" % ", ".join(reduction_stmts)
 
         # TODO: Explicit map unroller
+        #node.map.unroll = True
         if node.map.unroll:
             if node.map.schedule == dtypes.ScheduleType.CPU_Multicore:
                 raise ValueError("A Multicore CPU map cannot be unrolled (" + node.map.label + ")")

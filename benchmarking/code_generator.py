@@ -104,12 +104,11 @@ def generate(id, run_original_npbench, benchmark_file):
             # Iterate over multiple workload sizes
             for omp_use_task in [True, False]:
                 print("---OMP CONFIG TASKING:" + str(omp_use_task))
-                result_file_name = benchmark_data['benchmark']['name'] + str(omp_use_task) + ".csv"
+                header = "task" if omp_use_task else "no_task"
+                result_file_name = header + "-" + benchmark_data['benchmark']['short_name'] + ".csv"
                 csv_dir = benchmark_results_dir + result_file_name
 
-                # write csv header
                 file = open(csv_dir, 'w+')
-                file.write(list(benchmark_data['benchmark']['parameters'][list(params_dict)[0]])[0] + ", cycles\n")
                 for key in params_dict.keys():
                     params = benchmark_data['benchmark']['parameters'][key]
                     print("-PARAMETER:",params)
@@ -120,12 +119,13 @@ def generate(id, run_original_npbench, benchmark_file):
                     try:     
                         generate_benchmark_code(func, output_path, config, params)
                         cycles = execute_benchmark_code(output_path)
-                        file.write(str(list(params.values())[0]) + ", " + str(cycles) + '\n')
+                        file.write(str(cycles) + ", " + str(list(params.values())[0]) +  '\n')
                     #except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
                     except Exception as e:
                         print(e)
                         print("### Ignoring benchmark due to Errors !!! \n")
                         break
+                file.close()
 
 if __name__=="__main__":
     import argparse
