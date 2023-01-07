@@ -9,7 +9,9 @@
         "domain": "Solver",
         "dwarf": "dense_linear_algebra",
         "parameters": {
-            "Sim1": { "N": 100 }
+            "S": { "N": 100 },
+            "M": { "N": 300 },
+            "paper": { "N": 500 }
         },
         "init": {
             "func_name": "initialize",

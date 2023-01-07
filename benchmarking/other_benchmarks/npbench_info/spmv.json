@@ -9,7 +9,11 @@
         "domain": "Other",
         "dwarf": "sparse_linear_algebra",
         "parameters": {
-            "Sim1": { "M":  4096, "N": 4096, "nnz": 8192 }
+            "Sim3": { "M":  16384, "N": 16384, "nnz": 32768 },
+            "Sim4": { "M":  32768, "N": 32768, "nnz": 65536 },
+            "Sim5": { "M":  65536, "N": 65536, "nnz": 131072 },
+            "Sim6": { "M":  131072, "N": 131072, "nnz": 262144 },
+            "Sim7": { "M":  262144, "N": 262144, "nnz": 524288 }
         },
         "init": {
             "func_name": "initialize",

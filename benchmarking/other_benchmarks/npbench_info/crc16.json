@@ -9,7 +9,12 @@
         "domain": "Other",
         "dwarf": "combinatorial",
         "parameters": {
-            "Sim1": { "N": 1600 }
+            "Sim1": { "N": 25600 },
+            "Sim2": { "N": 51200 },
+            "Sim5": { "N": 102400 },
+            "Sim0": { "N": 204800 },
+            "Sim3": { "N": 409600 },
+            "Sim4": { "N": 819200 }
         },
         "init": {
             "func_name": "initialize",

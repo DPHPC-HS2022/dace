@@ -9,7 +9,10 @@
         "domain": "Others",
         "dwarf": "dense_linear_algebra",
         "parameters": {
-            "Sim1": { "N": 2000 }
+            "S": { "N": 2000 },
+            "M": { "N": 6000 },
+            "L": { "N": 20000 },
+            "paper": { "N": 12500 }
         },
         "init": {
             "func_name": "initialize",

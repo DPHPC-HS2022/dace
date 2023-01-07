@@ -10,7 +10,10 @@
         "dwarf": "dense_linear_algebra",
         "parameters": {
             "Sim1": { "NI": 100, "NJ": 110, "NK": 120 },
-            "Sim2": { "NI": 1000, "NJ": 1100, "NK": 1200 }
+            "Sim1_5": { "NI": 500, "NJ": 500, "NK": 500 },
+            "Sim2": { "NI": 1000, "NJ": 1100, "NK": 1200 },
+            "Sim3": { "NI": 2000, "NJ": 2100, "NK": 2200 },
+            "Sim4": { "NI": 3000, "NJ": 3100, "NK": 3200 }
         },
         "init": {
             "func_name": "initialize",
