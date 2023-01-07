@@ -29,19 +29,24 @@ def execute_benchmark_code(output_path):
     # Compile and Execute
     path = os.getcwd()
     os.chdir(output_path + '/build')
-    compile_cmd = 'gcc -I '+ path +'/../dace/runtime/include/ -I ' +path+'/ -o bin ../sample/*.cpp -L . -ltest' 
+    compile_cmd = 'gcc -I '+ path +'/../dace/runtime/include/ -I ' +path+'/ -o bin ../sample/*.cpp -L . -ltest -lm' 
     os.system(compile_cmd)
     create_script(compile_cmd)
     N = 1 # it's enough to execute the benchmark once as the benchmark executes the function multiple times
     avg = 0
+    stdev=0
     for i in range(N):
         out = subprocess.run('LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./bin', shell=True, capture_output=True).stdout
         print(out)
-        out = int(re.search(r'\d+', str(out)).group())
-        avg += out
+        outs = out.split(b'\n');
+        cycles = int(re.search(r'\d+', str(outs[0])).group())
+        std = float(re.search(r'\d+\.\d+', str(outs[1])).group())
+        avg += cycles
+        stdev += std
     avg /= N
+    stdev /= N
     os.chdir(path)
-    return avg
+    return avg, stdev
 
 # To manually run from benchmark run directory
 def create_script(compile_cmd):
@@ -118,8 +123,8 @@ def generate(id, run_original_npbench, benchmark_file):
 
                     try:     
                         generate_benchmark_code(func, output_path, config, params)
-                        cycles = execute_benchmark_code(output_path)
-                        file.write(str(cycles) + ", " + str(list(params.values())[0]) +  '\n')
+                        cycles, stdev = execute_benchmark_code(output_path)
+                        file.write(str(cycles) + ", " + str(list(params.values())[0]) + ", " + str(stdev) +  '\n')
                     #except (dace.codegen.exceptions.CompilerConfigurationError, KeyError):
                     except Exception as e:
                         print(e)

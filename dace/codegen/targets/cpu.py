@@ -1698,7 +1698,7 @@ class CPUCodeGen(TargetCodeGenerator):
 
         # Encapsulate map with a C scope
         # TODO: Refactor out of MapEntry generation (generate_scope_header?)
-        alternative = True
+        alternative = False
         if alternative and use_tasks:
             result.write("#pragma omp parallel\n#pragma omp single")
         callsite_stream.write('{', sdfg, state_id, node)
@@ -1790,8 +1790,8 @@ class CPUCodeGen(TargetCodeGenerator):
             if node.map.unroll:
                 result.write("#pragma unroll", sdfg, state_id, node)
 
-            if use_tasks and (i == node.map.collapse - 1 or i == len(node.map.range) - 1):
-                print("Loop data: ")
+            # if use_tasks and (i == node.map.collapse - 1 or i == len(node.map.range) - 1):
+            #     print("Loop data: ")
 
             if use_tasks_now and max_tasks:
                 result.write("for (auto %s_vec: %s_vec2d) {\n" % (var, var), sdfg, state_id, node)

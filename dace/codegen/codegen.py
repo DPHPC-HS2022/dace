@@ -93,7 +93,7 @@ int main(int argc, char **argv) {{
     #define N_RUNS 5
     myInt64 cycles[N_RUNS];
 
-    myInt64 start; = start_tsc();
+    myInt64 start = start_tsc();
 
     for (int i = 0; i < N_RUNS; ++i) {{
         start = start_tsc();
@@ -104,13 +104,13 @@ int main(int argc, char **argv) {{
     avg_cycles /= N_RUNS;
 
     //Compute std dev
-    double sum = 0.0, mean, SD = 0.0;
+    long double sum = 0.0, mean, SD = 0.0;
     for (int i = 0; i < N_RUNS; ++i) {{
         sum += (double)cycles[i];
     }}
     mean = sum / N_RUNS;
     for (int i = 0; i < N_RUNS; ++i) {{
-        SD += pow((double)cycles[i] - mean, 2);
+        SD += pow((long double)cycles[i] - mean, 2);
     }}
     SD = sqrt(SD / N_RUNS);
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {{
 
 {deallocations}
 
-    printf("Program ran for %lld cycles\\n With std dev: %lld", cycles, SD);
+    printf("Program ran for %llu cycles\\n With std dev: %Lf", avg_cycles, SD);
 
     return 0;
 }}
