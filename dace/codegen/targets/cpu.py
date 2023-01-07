@@ -1770,13 +1770,13 @@ class CPUCodeGen(TargetCodeGenerator):
 
         # Nested loops
         result.write(map_header, sdfg, state_id, node)
-        task_pragma = False
+        created_tasks = False
         for i, r in enumerate(node.map.range):
             # var = '__DACEMAP_%s_%d' % (node.map.label, i)
             var = map_params[i]
             begin, end, skip = r
 
-            use_tasks_now = use_tasks and (i == node.map.collapse - 1 or i == len(node.map.range) - 1)
+            use_tasks_now = use_tasks and (not created_tasks) and (i == node.map.collapse - 1 or i == len(node.map.range) - 1)
 
             if use_tasks_now and max_tasks:
                 indices_preparation = "int %s_cnt = 0;\nstd::vector<std::vector<decltype(%s)> > %s_vec2d(%s);\n" % (var, cpp.sym2cpp(begin), var, max_tasks) + \
@@ -1789,9 +1789,6 @@ class CPUCodeGen(TargetCodeGenerator):
 
             if node.map.unroll:
                 result.write("#pragma unroll", sdfg, state_id, node)
-
-            # if use_tasks and (i == node.map.collapse - 1 or i == len(node.map.range) - 1):
-            #     print("Loop data: ")
 
             if use_tasks_now and max_tasks:
                 result.write("for (auto %s_vec: %s_vec2d) {\n" % (var, var), sdfg, state_id, node)
@@ -1806,6 +1803,7 @@ class CPUCodeGen(TargetCodeGenerator):
 
             if use_tasks_now:
                 result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+                created_tasks = True
 
                 if max_tasks:
                     result.write("for (auto %s: %s_vec) {\n" % (var, var), sdfg, state_id, node)
