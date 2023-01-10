@@ -4,7 +4,7 @@ from dace import dtypes
 from dace.codegen.codegen import *
 from dace.codegen.compiler import *
 
-import glob, re, json
+import glob, re, json, copy
 import os, importlib
 import time
 
@@ -18,11 +18,18 @@ sys.path.insert(0, parentdir)
 
 def generate_benchmark_code(func, output_path, config, params_dict):      
     # Generate SDFG for the function
-    sdfg = func.to_sdfg()
+    sdfg = func.to_sdfg(simplify=False)
+    sdfg.apply_strict_transformations()
+    try:
+        final_sdfg = copy.deepcopy(sdfg)
+        final_sdfg.apply_transformations_repeated([MapFusion])
+        final_sdfg.apply_strict_transformations()
+    except Exception as e:
+        final_sdfg = copy.deepcopy(sdfg)
 
     # Generate code from the SDFG
-    code_objects = generate_code(sdfg,params_dict) # List of code objects  
-    generate_program_folder(sdfg, code_objects, output_path, config=config)
+    code_objects = generate_code(final_sdfg,params_dict) # List of code objects  
+    generate_program_folder(final_sdfg, code_objects, output_path, config=config)
     lib_file = configure_and_compile(output_path, program_name="test", output_stream=None)
 
 def execute_benchmark_code(output_path):

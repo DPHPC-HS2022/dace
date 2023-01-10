@@ -89,7 +89,7 @@ int main(int argc, char **argv) {{
     int warm_up_runs = 5;
     for(int i=0;i<warm_up_runs;i++) __program_{sdfg.name}(handle{params});
 
-    myInt64 avg_cycles;
+    myInt64 avg_cycles = 0;
     #define N_RUNS 5
     myInt64 cycles[N_RUNS];
 
