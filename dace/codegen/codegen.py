@@ -99,21 +99,19 @@ int main(int argc, char **argv) {{
         start = start_tsc();
         __program_{sdfg.name}(handle{params});
         cycles[i] = stop_tsc(start);
-        avg_cycles += cycles[i];
+        avg_cycles += cycles[i]/N_RUNS;
     }}
     __dace_exit_{sdfg.name}(handle);
 
     {deallocations}
 
-    avg_cycles /= N_RUNS;
-
     //Compute std dev
     long double SD = 0.0;
 
     for (int i = 0; i < N_RUNS; ++i) {{
-        SD += pow((long double)cycles[i] - avg_cycles, 2);
+        SD += pow((long double)cycles[i] - avg_cycles, 2) / N_RUNS;
     }}
-    SD = sqrt(SD / N_RUNS);
+    SD = sqrt(SD);
 
     printf("Program ran for %llu cycles\\n With std dev: %Lf", avg_cycles, SD);
 
