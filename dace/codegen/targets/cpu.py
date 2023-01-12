@@ -1681,13 +1681,26 @@ class CPUCodeGen(TargetCodeGenerator):
     ):
         state_dfg = sdfg.node(state_id)
         map_params = node.map.params
+        
+        parallelismType = dtypes.OMPParallelismType.Tasks if Config.get_bool('compiler', 'cpu', 'omp_use_tasks') else dtypes.OMPParallelismType.ParallelFor
+        node.map.omp_parallelism = parallelismType
+
         map_name = "__DACEMAP_" + str(state_id) + "_" + str(dfg.node_id(node))
 
         result = callsite_stream
         map_header = ""
 
+        use_tasks = node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+                    node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks
+        
+        if use_tasks:
+            max_tasks = node.map.omp_max_tasks
+
         # Encapsulate map with a C scope
         # TODO: Refactor out of MapEntry generation (generate_scope_header?)
+        alternative = False
+        if alternative and use_tasks:
+            result.write("#pragma omp parallel\n#pragma omp single")
         callsite_stream.write('{', sdfg, state_id, node)
 
         # Define all input connectors of this map entry
@@ -1708,7 +1721,8 @@ class CPUCodeGen(TargetCodeGenerator):
         # TODO: Refactor to generate_scope_preamble once a general code
         #  generator (that CPU inherits from) is implemented
         if node.map.schedule == dtypes.ScheduleType.CPU_Multicore:
-            map_header += "#pragma omp parallel for"
+            if not (alternative and use_tasks):
+                map_header += "#pragma omp parallel for"
             if node.map.omp_schedule != dtypes.OMPScheduleType.Default:
                 schedule = " schedule("
                 if node.map.omp_schedule == dtypes.OMPScheduleType.Static:
@@ -1741,9 +1755,13 @@ class CPUCodeGen(TargetCodeGenerator):
             #                var=outedge.src_conn))
             #            reduced_variables.append(outedge)
 
-            map_header += " %s\n" % ", ".join(reduction_stmts)
+            if use_tasks:
+                map_header += "\n"
+            else:
+                map_header += " %s\n" % ", ".join(reduction_stmts)
 
         # TODO: Explicit map unroller
+        #node.map.unroll = True
         if node.map.unroll:
             if node.map.schedule == dtypes.ScheduleType.CPU_Multicore:
                 raise ValueError("A Multicore CPU map cannot be unrolled (" + node.map.label + ")")
@@ -1752,21 +1770,44 @@ class CPUCodeGen(TargetCodeGenerator):
 
         # Nested loops
         result.write(map_header, sdfg, state_id, node)
+        created_tasks = False
         for i, r in enumerate(node.map.range):
             # var = '__DACEMAP_%s_%d' % (node.map.label, i)
             var = map_params[i]
             begin, end, skip = r
 
+            use_tasks_now = use_tasks and (not created_tasks) and (i == node.map.collapse - 1 or i == len(node.map.range) - 1)
+
+            if use_tasks_now and max_tasks:
+                indices_preparation = "int %s_cnt = 0;\nstd::vector<std::vector<decltype(%s)> > %s_vec2d(%s);\n" % (var, cpp.sym2cpp(begin), var, max_tasks) + \
+                    "for (auto %s = %s; %s < %s; %s += %s) { %s_vec2d[(%s_cnt++) %% %s].push_back(%s); }\n" % \
+                    (var, cpp.sym2cpp(begin), var, cpp.sym2cpp(end + 1), var, cpp.sym2cpp(skip), var, var, max_tasks, var) + \
+                    "while(!%s_vec2d.empty() and %s_vec2d.back().empty()) {%s_vec2d.pop_back();}\n" % (var, var, var)
+
+                result.write(indices_preparation, sdfg, state_id, node)
+
+
             if node.map.unroll:
                 result.write("#pragma unroll", sdfg, state_id, node)
 
-            result.write(
-                "for (auto %s = %s; %s < %s; %s += %s) {\n" %
-                (var, cpp.sym2cpp(begin), var, cpp.sym2cpp(end + 1), var, cpp.sym2cpp(skip)),
-                sdfg,
-                state_id,
-                node,
-            )
+            if use_tasks_now and max_tasks:
+                result.write("for (auto %s_vec: %s_vec2d) {\n" % (var, var), sdfg, state_id, node)
+            else:
+                result.write(
+                    "for (auto %s = %s; %s < %s; %s += %s) {\n" %
+                    (var, cpp.sym2cpp(begin), var, cpp.sym2cpp(end + 1), var, cpp.sym2cpp(skip)),
+                    sdfg,
+                    state_id,
+                    node,
+                )
+
+            if use_tasks_now:
+                result.write("#pragma omp task\n{\n", sdfg, state_id, node)
+                created_tasks = True
+
+                if max_tasks:
+                    result.write("for (auto %s: %s_vec) {\n" % (var, var), sdfg, state_id, node)
+
 
         callsite_stream.write(inner_stream.getvalue())
 
@@ -1798,6 +1839,13 @@ class CPUCodeGen(TargetCodeGenerator):
 
         for _ in map_node.map.range:
             result.write("}", sdfg, state_id, node)
+        
+        if node.map.schedule == dtypes.ScheduleType.CPU_Multicore and \
+        node.map.omp_parallelism == dtypes.OMPParallelismType.Tasks:
+            result.write("}", sdfg, state_id, node)
+
+            if node.map.omp_max_tasks:
+                result.write("}", sdfg, state_id, node)
 
         result.write(outer_stream.getvalue())
 

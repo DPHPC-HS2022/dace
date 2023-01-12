@@ -828,6 +828,18 @@ class Map(object):
                               desc="OpenMP schedule chunk size",
                               optional=True,
                               optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
+    
+    omp_parallelism = EnumProperty(dtype=dtypes.OMPParallelismType,
+                               default=dtypes.OMPParallelismType.Tasks,
+                               desc="OpenMP pragma used to parallelize the Map {for, task}",
+                               optional=True,
+                               optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore)
+    
+    omp_max_tasks = Property(dtype=int,
+                             default=0,
+                             desc="Maximum number of tasks to be created",
+                             optional=True,
+                             optional_condition=lambda m: m.schedule == dtypes.ScheduleType.CPU_Multicore and m.omp_parallelism == dtypes.OMPParallelismType.Tasks)
 
     gpu_block_size = ListProperty(element_type=int,
                                   default=None,

@@ -1,0 +1,27 @@
+{
+    "benchmark": {
+        "name": "Sparse Matrix-Vector Multiplication",
+        "short_name": "spmv",
+        "relative_path": "spmv",
+        "module_name": "spmv",
+        "func_name": "spmv",
+        "kind": "microapp",
+        "domain": "Other",
+        "dwarf": "sparse_linear_algebra",
+        "parameters": {
+            "Sim3": { "M":  16384, "N": 16384, "nnz": 32768 },
+            "Sim4": { "M":  32768, "N": 32768, "nnz": 65536 },
+            "Sim5": { "M":  65536, "N": 65536, "nnz": 131072 },
+            "Sim6": { "M":  131072, "N": 131072, "nnz": 262144 },
+            "Sim7": { "M":  262144, "N": 262144, "nnz": 524288 }
+        },
+        "init": {
+            "func_name": "initialize",
+            "input_args": ["M", "N", "nnz"],
+            "output_args": ["A_row", "A_col", "A_val", "x"]
+        },
+        "input_args": ["A_row", "A_col", "A_val", "x"],
+        "array_args": ["A_row", "A_col", "A_val", "x"],
+        "output_args": []
+    }
+}

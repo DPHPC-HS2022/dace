@@ -1,0 +1,26 @@
+{
+    "benchmark": {
+        "name": "Softmax",
+        "short_name": "softmax",
+        "relative_path": "deep_learning/softmax",
+        "module_name": "softmax",
+        "func_name": "softmax",
+        "kind": "microbench",
+        "domain": "Learning",
+        "dwarf": "dense_linear_algebra",
+        "parameters": {
+            "Sim1": { "N": 16, "H": 16, "SM": 128 },
+            "Sim2": { "N": 32, "H": 8, "SM": 256 },
+            "Sim3": { "N": 64, "H": 16, "SM": 256 },
+            "Sim4": { "N": 128, "H": 16, "SM": 512 }
+        },
+        "init": {
+            "func_name": "initialize",
+            "input_args": ["N", "H", "SM"],
+            "output_args": ["x"]
+        },
+        "input_args": ["x"],
+        "array_args": ["x"],
+        "output_args": []
+    }
+}

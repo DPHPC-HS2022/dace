@@ -36,7 +36,7 @@ def generate_headers(sdfg: SDFG, frame: framecode.DaCeCodeGenerator) -> str:
     return proto
 
 
-def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator) -> str:
+def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator, param_dict = {}) -> str:
     """ Generates a C program calling this SDFG. Since we do not
         know the purpose/semantics of the program, we allocate
         the right types and and guess values for scalars.
@@ -53,7 +53,12 @@ def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator) -> str:
     # first find all scalars and set them to 42
     for argname, arg in al.items():
         if isinstance(arg, data.Scalar):
-            allocations += ("    " + str(arg.as_arg(name=argname, with_types=True)) + " = 42;\n")
+            arg_name = str(arg.as_arg(name=argname, with_types=True))
+            name_key = str(arg.as_arg(name=argname, with_types=False))
+            if name_key in param_dict.keys():
+                allocations += ("    " + arg_name + " = " + str(param_dict[name_key]) + ";\n")
+            else:
+                allocations += ("    " + str(arg.as_arg(name=argname, with_types=True)) + " = 11;\n")
 
     # allocate the array args using calloc
     for argname, arg in al.items():
@@ -67,15 +72,48 @@ def generate_dummy(sdfg: SDFG, frame: framecode.DaCeCodeGenerator) -> str:
     return f'''#include <cstdlib>
 #include "../include/{sdfg.name}.h"
 
+#ifdef __x86_64__
+#include "tsc_x86.h"
+#include <math.h>
+#include <stdio.h>
+#endif
+
+
 int main(int argc, char **argv) {{
     {sdfg.name}Handle_t handle;
 {allocations}
 
     handle = __dace_init_{sdfg.name}({init_params});
-    __program_{sdfg.name}(handle{params});
+
+    //cache warm up
+    int warm_up_runs = 5;
+    for(int i=0;i<warm_up_runs;i++) __program_{sdfg.name}(handle{params});
+
+    myInt64 avg_cycles = 0;
+    #define N_RUNS 5
+    myInt64 cycles[N_RUNS];
+
+    myInt64 start;
+
+    for (int i = 0; i < N_RUNS; ++i) {{
+        start = start_tsc();
+        __program_{sdfg.name}(handle{params});
+        cycles[i] = stop_tsc(start);
+        avg_cycles += cycles[i]/N_RUNS;
+    }}
     __dace_exit_{sdfg.name}(handle);
 
-{deallocations}
+    {deallocations}
+
+    //Compute std dev
+    long double SD = 0.0;
+
+    for (int i = 0; i < N_RUNS; ++i) {{
+        SD += pow((long double)cycles[i] - avg_cycles, 2) / N_RUNS;
+    }}
+    SD = sqrt(SD);
+
+    printf("Program ran for %llu cycles\\n With std dev: %Lf", avg_cycles, SD);
 
     return 0;
 }}
@@ -146,7 +184,7 @@ def _get_codegen_targets(sdfg: SDFG, frame: framecode.DaCeCodeGenerator):
         disp.instrumentation[sdfg.instrument] = provider_mapping[sdfg.instrument]
 
 
-def generate_code(sdfg, validate=True) -> List[CodeObject]:
+def generate_code(sdfg, param_dict = {}, validate=True) -> List[CodeObject]:
     """
     Generates code as a list of code objects for a given SDFG.
 
@@ -260,7 +298,7 @@ def generate_code(sdfg, validate=True) -> List[CodeObject]:
 
     # add a dummy main function to show how to call the SDFG
     dummy = CodeObject(sdfg.name + "_main",
-                       generate_dummy(sdfg, frame),
+                       generate_dummy(sdfg, frame, param_dict),
                        'cpp',
                        cpu.CPUCodeGen,
                        'SampleMain',

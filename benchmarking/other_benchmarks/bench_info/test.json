@@ -1,0 +1,21 @@
+{
+    "benchmark":{
+		"name":"Dummy Tasking Test",
+		"short_name" : "test",
+		"relative_path":"test",
+		"module_name":"test",
+		"func_name":"test_func",
+		"parameters":{
+			"S0": { "N": 2, "M" : 28 },
+			"S1": { "N": 2, "M" : 34 },
+			"S2": { "N": 2, "M" : 40 },
+			"S3": { "N": 2, "M" : 46 },
+			"S4": { "N": 2, "M" : 52 },
+			"S5": { "N": 2, "M" : 56 }
+		}
+	},
+	"S1": { "N": 200, "M" : 450 },
+	"S3": { "N": 800, "M" : 1875 },
+	"S4": { "N": 1600, "M" : 3798 },
+	"S5": { "N": 3200, "M" : 6790 }
+}

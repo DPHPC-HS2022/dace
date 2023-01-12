@@ -1,0 +1,12 @@
+{
+    "benchmark":{
+    "name":"Merge Sort",
+	"short_name" : "mergesort",
+	"relative_path":"sort",
+	"module_name":"merge_sort",
+	"func_name":"mergesort",
+	"parameters":{
+	    "S": { "N": 10 }
+	}
+    }
+}

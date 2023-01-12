@@ -1,0 +1,16 @@
+{
+    "benchmark":{
+    "name":"Insertion Sort",
+	"short_name" : "insertionsort",
+	"relative_path":"sort",
+	"module_name":"insertion_sort",
+	"func_name":"insertionSort",
+	"parameters":{
+	    "S0": { "N": 100000 },
+		"S1": { "N": 1000000 },
+		"S2": { "N": 10000000 },
+		"S3": { "N": 100000000 },
+		"S4": { "N": 1000000000 }
+	}
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "benchmark":{
+    "name":"Bucket Sort",
+	"shortname" : "bucketsort",
+	"relative_path":"sort",
+	"module_name":"bucket_sort",
+	"func_name":"bucketSort",
+	"parameters":{
+	    "S": { "N": 10 }
+	}
+    }
+}
